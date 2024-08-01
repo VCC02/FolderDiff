@@ -30,7 +30,7 @@ interface
 
 uses
   Classes, SysUtils, SynHighlighterPas, SynHighlighterIni, SynHighlighterLFM,
-  SynHighlighterXML;
+  SynHighlighterXML, SynHighlighterPython;
 
 type
 
@@ -40,6 +40,7 @@ type
     SynIniSyn1: TSynIniSyn;
     SynLFMSyn1: TSynLFMSyn;
     SynPasSyn1: TSynPasSyn;
+    SynPythonSyn1: TSynPythonSyn;
     SynXMLSyn1: TSynXMLSyn;
   private
 

@@ -173,6 +173,7 @@ var
 {ToDo
 - Add log
 [in work] - Add splitters
+- bug??? - after searching for a file and clearing the editbox, the files are not displayed anymore, only the folders
 }
 
 

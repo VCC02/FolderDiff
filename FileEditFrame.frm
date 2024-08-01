@@ -30,9 +30,9 @@ object frFileEdit: TfrFileEdit
       Width = 386
       Anchors = [akTop, akLeft, akRight]
       Color = clBtnFace
-      ReadOnly = True
       TabOrder = 0
       OnChange = edtLeftPathChange
+      OnKeyDown = edtLeftPathKeyDown
     end
     object lblModifiedLeft: TLabel
       Left = 0
@@ -74,9 +74,9 @@ object frFileEdit: TfrFileEdit
       Width = 384
       Anchors = [akTop, akLeft, akRight]
       Color = clBtnFace
-      ReadOnly = True
       TabOrder = 0
       OnChange = edtRightPathChange
+      OnKeyDown = edtRightPathKeyDown
     end
     object lblModifiedRight: TLabel
       Left = 0

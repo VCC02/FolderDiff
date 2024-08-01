@@ -60,6 +60,10 @@ type
     tmrSetRightFromLeftPosition: TTimer;
     tmrRepaintMinimapOnSelect: TTimer;
     tmrSetLeftFromRightPosition: TTimer;
+    procedure edtLeftPathKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure edtRightPathKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FindDialog1Find(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure MenuItem_OpenInTextEditorClick(Sender: TObject);
@@ -89,6 +93,8 @@ type
     procedure DoOnCreateNewTextEditorFrame;
 
     procedure CreateRemainingUIComponents;
+    procedure ReloadFiles;
+
     procedure SynEdtLeftOnProcessCommand(Sender: TObject; var Command: TSynEditorCommand; var AChar: TUTF8Char; Data: Pointer);
     procedure SynEdtRightOnProcessCommand(Sender: TObject; var Command: TSynEditorCommand; var AChar: TUTF8Char; Data: Pointer);
 
@@ -504,17 +510,7 @@ begin
   FSelectedSynEdit := Sender as TSynEdit;
 
   if Key = VK_F5 then
-  begin
-    TempTopLine := synedtLeft.TopLine;
-    LoadContentIntoSynEdits;
-    LoadContentIntoMiniMap;
-
-    synedtLeft.TopLine := TempTopLine;
-    synedtRight.TopLine := TempTopLine;
-
-    FMiniMap.SelectedEntryIndex := synedtLeft.TopLine - 1;
-    tmrRepaintMinimapOnSelect.Enabled := True
-  end;
+    ReloadFiles;
 
   if Key = Ord('F') then
     if ssCtrl in Shift then
@@ -707,6 +703,42 @@ end;
 procedure TfrFileDiff.FindDialog1Find(Sender: TObject);
 begin
   FindNextText;
+end;
+
+
+procedure TfrFileDiff.ReloadFiles;
+var
+  TempTopLine: Integer;
+begin
+  //DisplayDiff(edtLeftPath.Text, edtRightPath.Text, FOnCreateNewTextEditorFrame);
+
+  TempTopLine := synedtLeft.TopLine;
+  LoadContentIntoSynEdits;
+  LoadContentIntoMiniMap;
+
+  synedtLeft.TopLine := TempTopLine;
+  synedtRight.TopLine := TempTopLine;
+
+  FMiniMap.SelectedEntryIndex := synedtLeft.TopLine - 1;
+  tmrRepaintMinimapOnSelect.Enabled := True;
+end;
+
+
+procedure TfrFileDiff.edtLeftPathKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+    ReloadFiles;
+end;
+
+
+procedure TfrFileDiff.edtRightPathKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  TempTopLine: Integer;
+begin
+  if Key = VK_RETURN then
+    ReloadFiles;
 end;
 
 

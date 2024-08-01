@@ -72,6 +72,12 @@ begin
     ASynEdit.Highlighter := dmHighlighters.SynXMLSyn1;
     Exit;
   end;
+
+  if Extension = '.py' then
+  begin
+    ASynEdit.Highlighter := dmHighlighters.SynPythonSyn1;
+    Exit;
+  end;
 end;
 
 

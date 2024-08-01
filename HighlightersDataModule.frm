@@ -39,4 +39,10 @@ object dmHighlighters: TdmHighlighters
     Left = 136
     Top = 88
   end
+  object SynPythonSyn1: TSynPythonSyn
+    DefaultFilter = 'Python Files (*.py)|*.py'
+    Enabled = False
+    Left = 216
+    Top = 24
+  end
 end

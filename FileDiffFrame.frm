@@ -30,6 +30,7 @@ object frFileDiff: TfrFileDiff
       Anchors = [akTop, akLeft, akRight]
       Color = clBtnFace
       TabOrder = 0
+      OnKeyDown = edtLeftPathKeyDown
     end
   end
   object pnlRight: TPanel
@@ -53,6 +54,7 @@ object frFileDiff: TfrFileDiff
       Anchors = [akTop, akLeft, akRight]
       Color = clBtnFace
       TabOrder = 0
+      OnKeyDown = edtRightPathKeyDown
     end
   end
   object pnlMiniMap: TPanel

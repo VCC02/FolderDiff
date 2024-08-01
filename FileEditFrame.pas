@@ -56,7 +56,11 @@ type
     tmrStartup: TTimer;
     tmrRefreshHighlighter: TTimer;
     procedure edtLeftPathChange(Sender: TObject);
+    procedure edtLeftPathKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure edtRightPathChange(Sender: TObject);
+    procedure edtRightPathKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FindDialog1Find(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure MenuItem_ShowSpecialCharsClick(Sender: TObject);
@@ -328,6 +332,22 @@ end;
 procedure TfrFileEdit.edtLeftPathChange(Sender: TObject);
 begin
   tmrRefreshHighlighter.Enabled := True;
+end;
+
+
+procedure TfrFileEdit.edtLeftPathKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+    ReloadFiles;
+end;
+
+
+procedure TfrFileEdit.edtRightPathKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+    ReloadFiles;
 end;
 
 
