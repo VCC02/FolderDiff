@@ -55,6 +55,7 @@ object frmFolderDiffMain: TfrmFolderDiffMain
           Top = 5
           Width = 448
           Anchors = [akTop, akLeft, akRight]
+          PopupMenu = pmRecent
           TabOrder = 0
           OnKeyDown = edtLeftKeyDown
         end
@@ -65,6 +66,7 @@ object frmFolderDiffMain: TfrmFolderDiffMain
           Width = 26
           Anchors = [akTop, akRight]
           Caption = '...'
+          PopupMenu = pmRecent
           OnClick = spdbtnLeftClick
         end
       end
@@ -83,6 +85,7 @@ object frmFolderDiffMain: TfrmFolderDiffMain
           Top = 5
           Width = 448
           Anchors = [akTop, akLeft, akRight]
+          PopupMenu = pmRecent
           TabOrder = 0
           OnKeyDown = edtRightKeyDown
         end
@@ -93,6 +96,7 @@ object frmFolderDiffMain: TfrmFolderDiffMain
           Width = 26
           Anchors = [akTop, akRight]
           Caption = '...'
+          PopupMenu = pmRecent
           OnClick = spdbtnRightClick
         end
       end
@@ -478,5 +482,23 @@ object frmFolderDiffMain: TfrmFolderDiffMain
     ErrorDescriptor.FileWriteMode = fwmTruncate
     Left = 432
     Top = 233
+  end
+  object pmRecent: TPopupMenu
+    Left = 80
+    Top = 94
+    object MenuItem_AddToRecent: TMenuItem
+      Caption = 'Add to recent'
+      OnClick = MenuItem_AddToRecentClick
+    end
+    object MenuItem_RemoveCurrentPathsFromRecent: TMenuItem
+      Caption = 'Remove current paths from recent'
+      OnClick = MenuItem_RemoveCurrentPathsFromRecentClick
+    end
+    object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_Recent: TMenuItem
+      Caption = 'Recent'
+    end
   end
 end

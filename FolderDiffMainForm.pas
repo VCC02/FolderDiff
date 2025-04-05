@@ -72,6 +72,10 @@ type
     edtRight: TEdit;
     imglstVST: TImageList;
     lblFilter: TLabel;
+    MenuItem_Recent: TMenuItem;
+    Separator1: TMenuItem;
+    MenuItem_RemoveCurrentPathsFromRecent: TMenuItem;
+    MenuItem_AddToRecent: TMenuItem;
     MenuItem_ShowInExplorer: TMenuItem;
     MenuItem_OpenInEditMode: TMenuItem;
     MenuItem_CloseActiveTab: TMenuItem;
@@ -79,6 +83,7 @@ type
     pnlLeft: TPanel;
     pnlRight: TPanel;
     pmTabs: TPopupMenu;
+    pmRecent: TPopupMenu;
     SelectDirectoryDialog1: TSelectDirectoryDialog;
     spdbtnDiff: TSpeedButton;
     spdbtnLeft: TSpeedButton;
@@ -102,8 +107,10 @@ type
     procedure edtSearchChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure MenuItem_AddToRecentClick(Sender: TObject);
     procedure MenuItem_CloseActiveTabClick(Sender: TObject);
     procedure MenuItem_OpenInEditModeClick(Sender: TObject);
+    procedure MenuItem_RemoveCurrentPathsFromRecentClick(Sender: TObject);
     procedure MenuItem_ShowInExplorerClick(Sender: TObject);
     procedure PageControlMainChange(Sender: TObject);
     procedure spdbtnDiffClick(Sender: TObject);
@@ -146,6 +153,8 @@ type
     FFormatSettings: TFormatSettings;
     FActionsHitInfo: THitInfo;
 
+    FRecentPathsLeft, FRecentPathsRight: TStringList;
+
     procedure AddAllFoldersAndFilesFromFolder(ABaseNode: PVirtualNode; ABasePathLeft, ABasePathRight: string; ALoadFileDetails, AFullLoading: Boolean; ARecursionLevel: Integer);
     procedure Compare;
     procedure FilterComparison;
@@ -153,11 +162,13 @@ type
     procedure CreateNewDiffTab;
     procedure CreateNewTextEditorTab(ALeftFileName, ARightFileName: string);
 
+    procedure FillInRecent;
     procedure LoadSettingsFromIni;
     procedure SaveSettingsToIni;
 
     procedure HandleOnCreateNewTextEditorFrame(ALeftFileName, ARightFileName: string);
     procedure DisplayFirstSelectedFileInStatusBar;
+    procedure HandleOnRecentClick(Sender: TObject);
   public
 
   end;
@@ -166,6 +177,7 @@ type
 const
   CDiffStatusStr: array[TDiffStatus] of string = ('<', '=', '>', '?', '<>');
   CSyncDirStr: array[TSyncDir] of string = ('left to right', 'right to left');
+  CLeftRightMenuSpace = '  ';
 
 var
   frmFolderDiffMain: TfrmFolderDiffMain;
@@ -174,6 +186,7 @@ var
 - Add log
 [in work] - Add splitters
 - bug??? - after searching for a file and clearing the editbox, the files are not displayed anymore, only the folders
+- MenuItem_OpenInEditModeClick should open based on what is the focued tab (main folder diff, or a file diff)
 }
 
 
@@ -335,9 +348,28 @@ begin
 end;
 
 
+procedure TfrmFolderDiffMain.FillInRecent;
+var
+  i: Integer;
+  TempMenuItem: TMenuItem;
+begin
+  MenuItem_Recent.Clear;
+
+  for i := 0 to FRecentPathsLeft.Count - 1 do
+  begin
+    TempMenuItem := TMenuItem.Create(Self);
+    TempMenuItem.Caption := FRecentPathsLeft.Strings[i] + CLeftRightMenuSpace + FRecentPathsRight.Strings[i];
+    TempMenuItem.OnClick := @HandleOnRecentClick;
+
+    MenuItem_Recent.Add(TempMenuItem);
+  end;
+end;
+
+
 procedure TfrmFolderDiffMain.LoadSettingsFromIni;
 var
   Ini: TMemIniFile;
+  i, n: Integer;
 begin
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'FolderDiff.ini');
   try
@@ -348,6 +380,14 @@ begin
 
     cmbFilter.ItemIndex := Max(0, Min(Ini.ReadInteger('Settings', 'DiffFilter', 0), cmbFilter.Items.Count - 1));
 
+    n := Ini.ReadInteger('Settings', 'RecentCount', 0);
+    for i := 0 to n - 1 do
+    begin
+      FRecentPathsLeft.Add(Ini.ReadString('Settings', 'RecentLeft_' + IntToStr(i), ''));
+      FRecentPathsRight.Add(Ini.ReadString('Settings', 'RecentRight_' + IntToStr(i), ''));
+    end;
+
+    FillInRecent;
   finally
     Ini.Free;
   end;
@@ -357,6 +397,7 @@ end;
 procedure TfrmFolderDiffMain.SaveSettingsToIni;
 var
   Ini: TMemIniFile;
+  i: Integer;
 begin
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'FolderDiff.ini');
   try
@@ -366,6 +407,13 @@ begin
     Ini.WriteInteger('MainWindow', 'Height', Height);
 
     Ini.WriteInteger('Settings', 'DiffFilter', cmbFilter.ItemIndex);
+
+    Ini.WriteInteger('Settings', 'RecentCount', FRecentPathsLeft.Count);
+    for i := 0 to FRecentPathsLeft.Count - 1 do
+    begin
+      Ini.WriteString('Settings', 'RecentLeft_' + IntToStr(i), FRecentPathsLeft.Strings[i]);
+      Ini.WriteString('Settings', 'RecentRight_' + IntToStr(i), FRecentPathsRight.Strings[i]);
+    end;
 
     Ini.UpdateFile;
   finally
@@ -751,12 +799,18 @@ begin
     SaveSettingsToIni;
   except
   end;
+
+  FRecentPathsLeft.Free;
+  FRecentPathsRight.Free;
 end;
 
 
 procedure TfrmFolderDiffMain.FormCreate(Sender: TObject);
 begin
   vstDiff.NodeDataSize := SizeOf(TNodeData);
+  FRecentPathsLeft := TStringList.Create;
+  FRecentPathsRight := TStringList.Create;
+
   tmrStartup.Enabled := True;
 
   FFormatSettings := DefaultFormatSettings;
@@ -764,6 +818,70 @@ begin
   FFormatSettings.LongTimeFormat := 'HH:MM:SS';
 
   FActionsHitInfo.HitColumn := -1;
+end;
+
+
+procedure TfrmFolderDiffMain.HandleOnRecentClick(Sender: TObject);
+var
+  LeftPath, RightPath, s: string;
+begin
+  s := (Sender as TMenuItem).Caption;
+  s := StringReplace(s, '&', '', [rfReplaceAll]);
+
+  LeftPath := Copy(s, 1, Pos(CLeftRightMenuSpace, s) - 1);
+  RightPath := Copy(s, Pos(CLeftRightMenuSpace, s) + Length(CLeftRightMenuSpace), MaxInt);
+  edtLeft.Text := LeftPath;
+  edtRight.Text := RightPath;
+  Compare;
+end;
+
+
+procedure TfrmFolderDiffMain.MenuItem_AddToRecentClick(Sender: TObject);
+begin
+  FRecentPathsLeft.Add(edtLeft.Text);
+  FRecentPathsRight.Add(edtRight.Text);
+
+  FillInRecent;
+end;
+
+
+procedure TfrmFolderDiffMain.MenuItem_RemoveCurrentPathsFromRecentClick(
+  Sender: TObject);
+var
+  i, Idx: Integer;
+  s: string;
+begin
+  Idx := -1;
+  for i := 0 to FRecentPathsLeft.Count - 1 do
+    if (FRecentPathsLeft.Strings[i] = edtLeft.Text) and
+       (FRecentPathsRight.Strings[i] = edtRight.Text) then
+    begin
+      Idx := i;
+      Break;
+    end;
+
+  if Idx = -1 then
+  begin
+    MessageBox(Handle, 'The current paths are not in the list of recent paths.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  for i := 0 to MenuItem_Recent.Count - 1 do
+  begin
+    s := MenuItem_Recent.Items[i].Caption;
+    s := StringReplace(s, '&', '', [rfReplaceAll]);
+
+    if s = edtLeft.Text + CLeftRightMenuSpace + edtRight.Text then
+    begin
+      MenuItem_Recent.Delete(i);
+      FRecentPathsLeft.Delete(Idx);
+      FRecentPathsRight.Delete(Idx);
+
+      Break;
+    end;
+  end;
+
+  FillInRecent;
 end;
 
 
